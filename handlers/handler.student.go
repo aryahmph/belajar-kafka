@@ -5,6 +5,7 @@ import (
 	"belajar_kafka/pkg"
 	"encoding/json"
 	"github.com/Shopify/sarama"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strings"
 )
@@ -17,7 +18,7 @@ func NewStudentHandler(producer sarama.SyncProducer) *StudentHandler {
 	return &StudentHandler{Producer: producer}
 }
 
-func (handler *StudentHandler) Create(writer http.ResponseWriter, request *http.Request) {
+func (handler *StudentHandler) Create(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	err := request.ParseForm()
 	pkg.PanicIfError(err)
 

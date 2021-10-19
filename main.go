@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/Shopify/sarama"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
 
@@ -23,19 +24,16 @@ func main() {
 
 	studentRepository := repositories.NewStudentRepositoryImpl(db)
 	studentService := services.NewStudentServiceImpl(consumer, studentRepository)
-	_ = handlers.NewStudentHandler(producer)
+	studentHandler := handlers.NewStudentHandler(producer)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		fmt.Fprintf(writer, "Hello WOrld")
+	go studentService.Subscribe()
+
+	router := httprouter.New()
+	router.GET("/", func(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+		fmt.Fprintf(writer, "Hello World")
 	})
+	router.POST("/", studentHandler.Create)
 
-	server := http.Server{
-		Addr:    "localhost:8080",
-		Handler: mux,
-	}
-
-	studentService.Subscribe()
-	err = server.ListenAndServe()
+	err = http.ListenAndServe(":3000", router)
 	pkg.PanicIfError(err)
 }
